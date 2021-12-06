@@ -1859,14 +1859,28 @@ void colour_selector(int cs_type)
 #define QUAN_MAXMIN  4
 #define QUAN_MAX     5
 
+
 #define DITH_NONE	0
-#define DITH_FS		1
-#define DITH_STUCKI	2
-#define DITH_ORDERED	3
-#define DITH_DUMBFS	4
-#define DITH_OLDDITHER	5
-#define DITH_OLDSCATTER	6
-#define DITH_MAX	7
+
+#define DITH_ORDERED	1
+
+#define DITH_OLDDITHER	2
+#define DITH_OLDSCATTER	3
+
+#define DITH_FS		4
+#define DITH_DUMBFS	5
+
+#define DITH_JJN	6
+#define DITH_STUCKI	7
+#define DITH_BURKES 8
+
+#define DITH_SIERRA     9
+#define DITH_TR_SIERRA 	10
+#define DITH_SIERRA_LITE	11
+
+#define DITH_ATKINSON	12
+
+#define DITH_MAX	13
 
 typedef struct {
 	int pflag;
@@ -1912,12 +1926,38 @@ static void click_quantize_ok(quantize_dd *dt, void **wdata)
 	unsigned char *old_image = mem_img[CHN_IMAGE];
 
 	/* Dithering filters */
-	/* Floyd-Steinberg dither */
 	static short fs_dither[16] =
-		{ 16,  0, 0, 0, 7, 0,  0, 3, 5, 1, 0,  0, 0, 0, 0, 0 };
-	/* Stucki dither */
-	static short s_dither[16] =
-		{ 42,  0, 0, 0, 8, 4,  2, 4, 8, 4, 2,  1, 2, 4, 2, 1 };
+		{ 16,  0, 0, 0, 7, 0,
+		       0, 3, 5, 1, 0,
+			   0, 0, 0, 0, 0 };
+	static short jjn_dither[16] =
+		{ 48,  0, 0, 0, 7, 5,
+		       3, 5, 7, 5, 3,
+			   1, 3, 5, 3, 1 };
+	static short stucki_dither[16] =
+		{ 42,  0, 0, 0, 8, 4,
+		       2, 4, 8, 4, 2,
+			   1, 2, 4, 2, 1 };
+	static short burkes_dither[16] =
+		{ 32,  0, 0, 0, 8, 4,
+			   2, 4, 8, 4, 2,
+			   0, 0, 0, 0, 0 };
+	static short sierra_dither[16] =
+		{ 32,  0, 0, 0, 5, 3,
+		       2, 4, 5, 4, 2,
+			   0, 2, 3, 2, 0 };
+	static short tr_sierra_dither[16] =
+		{ 16,  0, 0, 0, 4, 3,
+		       1, 2, 3, 2, 1,
+			   0, 0, 0, 0, 0 };
+	static short sierra_lite_dither[16] =
+		{ 4,   0, 0, 0, 2, 0,
+		       0, 1, 1, 0, 0,
+			   0, 0, 0, 0, 0 };
+	static short atkinson_dither[16] =
+		{ 8,   0, 0, 0, 1, 1,
+		       0, 1, 1, 1, 0,
+			   0, 0, 1, 0, 0 };
 
 	run_query(wdata);
 	dither = quantize_mode != QUAN_EXACT ? dither_mode : DITH_NONE;
@@ -1982,9 +2022,23 @@ static void click_quantize_ok(quantize_dd *dt, void **wdata)
 	{
 	case DITH_NONE:
 	case DITH_FS:
+	case DITH_JJN:
 	case DITH_STUCKI:
-		err = mem_dither(old_image, new_cols, dither == DITH_NONE ?
-			NULL : dither == DITH_FS ? fs_dither : s_dither,
+	case DITH_BURKES:
+	case DITH_SIERRA:
+	case DITH_TR_SIERRA:
+	case DITH_SIERRA_LITE:
+	case DITH_ATKINSON:
+		err = mem_dither(old_image, new_cols,
+			dither == DITH_NONE ? NULL :
+			dither == DITH_FS ? fs_dither :
+			dither == DITH_JJN ? jjn_dither :
+			dither == DITH_STUCKI ? stucki_dither :
+			dither == DITH_BURKES ? burkes_dither :
+			dither == DITH_SIERRA ? sierra_dither :
+			dither == DITH_TR_SIERRA ? tr_sierra_dither :
+			dither == DITH_SIERRA_LITE ? sierra_lite_dither :
+			atkinson_dither,
 			dither_cspace, dither_dist, dither_limit, dither_sel,
 			dither_scan, dither_8b, efrac * 0.01);
 		break;
@@ -2033,11 +2087,28 @@ static char *quan_txt[] = { _("Exact Conversion"), _("Use Current Palette"),
 	_("PNN Quantize (slow, better quality)"),
 	_("Wu Quantize (fast)"),
 	_("Max-Min Quantize (best for small palettes and dithering)"), NULL };
-static char *dith_txt[] = { _("None"), _("Floyd-Steinberg"), _("Stucki"),
+static char *dith_txt[] = {
+	_("None"),
 // !!! "Ordered" not done yet !!!
-	/* _("Ordered") */ "",
-	_("Floyd-Steinberg (quick)"), _("Dithered (effect)"),
-	_("Scattered (effect)"), NULL };
+	"",
+
+	_("Dithered (effect)"),
+	_("Scattered (effect)"),
+
+	_("Floyd-Steinberg"),
+	_("Floyd-Steinberg (quick)"),
+
+	_("JJN"),
+	_("Stucki"),
+	_("Burkes"),
+
+	_("Sierra"),
+	_("Two-row Sierra"),
+	_("Sierra Lite"),
+
+	_("Atkinson"),
+
+	NULL };
 static char *clamp_txt[] = { _("Gamut"), _("Weakly"), _("Strongly") };
 static char *err_txt[] = { _("Off"), _("Separate/Sum"), _("Separate/Split"),
 	_("Length/Sum"), _("Length/Split"), NULL };
