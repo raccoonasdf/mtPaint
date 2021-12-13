@@ -3067,7 +3067,7 @@ static int lookup_srgb(double *srgb)
 // !!! No support for transparency yet !!!
 /* Damping functions roughly resemble old GIMP's behaviour, but may need some
  * tuning because linear sRGB is just too different from normal RGB */
-int mem_dither(unsigned char *old, int ncols, short *dither, int cspace,
+int mem_dither(unsigned char *old, int ncols, const short *dither, int cspace,
 	int dist, int limit, int selc, int serpent, int rgb8b, double emult)
 {
 	int i, j, k, l, kk, j0, j1, dj, rlen, col0, col1, progress;
@@ -3522,8 +3522,7 @@ int mem_quantize( unsigned char *old_mem_image, int target_cols, int type )
 //				  	if ( closest[1][1]/2 >= closest[1][0] )
 				  	if ( closest[1][1]*.67 < (closest[1][1] - closest[1][0]) )
 						k = closest[0][0];
-					else
-					{
+					else {
 					  	if ( closest[0][0] > closest[0][1] )
 							k = closest[0][ (i+j) % 2 ];
 						else

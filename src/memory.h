@@ -741,7 +741,7 @@ int maxminquan(unsigned char *inbuf, int width, int height, int quant_to,
 int pnnquan(unsigned char *inbuf, int width, int height, int quant_to,
 	png_color *userpal);
 //	Convert RGB->indexed using error diffusion with variety of options
-int mem_dither(unsigned char *old, int ncols, short *dither, int cspace,
+int mem_dither(unsigned char *old, int ncols, const short *dither, int cspace,
 	int dist, int limit, int selc, int serpent, int rgb8b, double emult);
 //	Do the same in dumb but fast way
 int mem_dumb_dither(unsigned char *old, unsigned char *new, png_color *pal,
